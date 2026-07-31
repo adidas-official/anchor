@@ -1,3 +1,4 @@
 google-genai
 trafilatura
 feedparser
+curl_cffi

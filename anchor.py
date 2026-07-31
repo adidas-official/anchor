@@ -128,7 +128,7 @@ def generate_audio(client):
 
 def play_audio():
     run(["paplay", "morning_intro.mp3"])
-    run(["paplay", "--volume", "50000", "morning_summary.wav"])
+    run(["paplay", "morning_summary.wav"])
 
 def main():
 
