@@ -1,3 +1,4 @@
 morning_summary.*
 .env
-anchor.log
+*.log
+*.json
