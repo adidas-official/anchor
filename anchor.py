@@ -12,7 +12,7 @@ import base64
 from subprocess import run 
 from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_candidates():
     rss_links = [
@@ -128,7 +128,7 @@ def generate_audio(client):
 
 def play_audio():
     run(["paplay", "morning_intro.mp3"])
-    run(["paplay", "morning_summary.wav"])
+    run(["paplay", "--volume", "50000", "morning_summary.wav"])
 
 def main():
 
