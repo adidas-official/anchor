@@ -12,7 +12,6 @@ import base64
 from subprocess import run 
 from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_candidates():
     rss_links = [
@@ -36,8 +35,13 @@ def get_candidates():
 
 def filter_candidates(client):
     candidates = get_candidates()
+    day = datetime.now().strftime("%A")
     prompt_selection = f"""
-    Z následujícího seznamu zpráv vyber 4 nejvýznamnější.
+    Z následujícího seznamu zpráv vyber 5 nejvýznamnějších.
+    Pokud je dnes mezi sobota až středa, nevybírej zpravy s násilnou tématikou, bez válek, zločinů a podobně.
+    V tyto dny upřednostni více technických a pozitivních nebo alespoň neutrálních zpráv. Zprávy typu "Válka čipů" a podobně jsou v pořádku,
+    ale v tyto dny se vyhni ozbrojeným konfliktům a násilným činnům.
+    Čtvrtek a pátek mohou být zprávy bez omezení. Dnes je {day}.
     Vráť POUZE platný JSON pole objektů obsahující pouze jejich název ('title') a URL adresy ('link')
 
     Seznam článků:
@@ -72,6 +76,9 @@ def filter_candidates(client):
 
     prompt_summary = f"""
     Vytvoř stručný souhrn následujících zpráv, který bude vhodný pro hlasové čtení.
+    Jednu zprávu si vymysli. Snaž se, aby zněla věrohodně a byla v souladu s ostatními zprávami, ale ať je trochu satirická.
+    Například, že se most se vlivem teplotní roztažnosti roztáhl o 17 metrů. 
+    Souhrn by měl být vhodný pro čtení přirozeným hlasem, aby posluchač získal jasnou představu o obsahu zpráv.
     Začni pozdravem dobrého rána a dnešním datumem {datum} v češtině.
     Souhrn by měl být přehledný a srozumitelný, aby posluchač získal jasnou představu o obsahu zpráv.
     Jednen článek by neměl přesahovat 1 minutu čtení, ale zároveň by měl obsahovat všechny klíčové informace.
@@ -79,6 +86,9 @@ def filter_candidates(client):
 
     Zprávy:
     {news}
+
+    Na konci se zeptej posluchače, zda rozeznal, že jedna zpráva byla vymyšlená, a pokud ano, která to byla.
+    Nech 5 vteřin na odpověď a poté uveď, která byla vymyšlená.
     Hlášení ukonči s poděkováním za poslech a přáním hezkého dne.
     """
     logging.debug(f"Prompt for summary:\n{prompt_summary}\n")
@@ -132,6 +142,7 @@ def play_audio():
 
 def main():
 
+    logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
     script_dir = Path(__file__).resolve().parent
     logging.debug(f"Changing working directory to: {script_dir}")
     chdir(script_dir)
