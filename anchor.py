@@ -9,7 +9,6 @@ from datetime import datetime
 import logging
 import wave
 import base64
-from subprocess import run 
 from pathlib import Path
 
 
@@ -143,10 +142,6 @@ def generate_audio(client):
     audio_data = base64.b64decode(interaction.output_audio.data)
     wave_file("morning_summary.wav", audio_data)
 
-def play_audio():
-    run(["paplay", "morning_intro.mp3"])
-    run(["paplay", "morning_summary.wav"])
-
 def main():
 
     logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
@@ -160,7 +155,6 @@ def main():
     generate_summary(client)
     generate_audio(client)
     client.close()
-    play_audio()
 
 if __name__ == "__main__":
     main()
