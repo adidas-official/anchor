@@ -32,6 +32,17 @@ def get_candidates():
             candidates.append({"title": title, "link": link, "description": description})
     return candidates
 
+def get_weather():
+    weather_api_url = "https://api.met.no/weatherapi/locationforecast/2.0/"
+    location = ("49.40384459207464, 15.170718321685152")
+    call = f"{weather_api_url}compact?lat={location[0]}&lon={location[1]}"
+    response = requests.get(call, headers={"User-Agent": "AcmeWeatherApp/0.9 github.com/acmeweatherapp"})
+    if response.status_code == 200:
+        weather_data = response.json()
+        print("Weather data:", weather_data)
+    else:
+        print(f"Failed to fetch weather data. Status code: {response.status_code}")
+
 
 def filter_candidates(client):
     candidates = get_candidates()
@@ -76,8 +87,6 @@ def filter_candidates(client):
 
     prompt_summary = f"""
     Vytvoř stručný souhrn následujících zpráv, který bude vhodný pro hlasové čtení.
-    Jednu zprávu si vymysli. Snaž se, aby zněla věrohodně a byla v souladu s ostatními zprávami, ale ať je trochu satirická.
-    Například, že se most se vlivem teplotní roztažnosti roztáhl o 17 metrů. 
     Souhrn by měl být vhodný pro čtení přirozeným hlasem, aby posluchač získal jasnou představu o obsahu zpráv.
     Začni pozdravem dobrého rána a dnešním datumem {datum} v češtině.
     Souhrn by měl být přehledný a srozumitelný, aby posluchač získal jasnou představu o obsahu zpráv.
@@ -87,8 +96,6 @@ def filter_candidates(client):
     Zprávy:
     {news}
 
-    Na konci se zeptej posluchače, zda rozeznal, že jedna zpráva byla vymyšlená, a pokud ano, která to byla.
-    Nech 5 vteřin na odpověď a poté uveď, která byla vymyšlená.
     Hlášení ukonči s poděkováním za poslech a přáním hezkého dne.
     """
     logging.debug(f"Prompt for summary:\n{prompt_summary}\n")
@@ -128,7 +135,7 @@ def generate_audio(client):
         response_format={"type": "audio"},
             generation_config={
                 "speech_config": [
-                    {"voice": "Kore"}
+                    {"voice": "Aoede"}
             ]
         }
     )
