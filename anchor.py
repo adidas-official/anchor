@@ -144,10 +144,10 @@ def generate_audio(client):
 
 def main():
 
-    logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
     script_dir = Path(__file__).resolve().parent
-    logging.debug(f"Changing working directory to: {script_dir}")
     chdir(script_dir)
+    logging.basicConfig(level=logging.DEBUG, filename="anchor.log", format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.debug(f"Changing working directory to: {script_dir}")
 
     load_dotenv()
     google_api_key = getenv("GOOGLE_API_KEY")
