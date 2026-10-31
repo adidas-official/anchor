@@ -2,3 +2,4 @@ morning_summary.*
 .env
 *.log
 *.json
+*.sqlite

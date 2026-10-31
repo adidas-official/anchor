@@ -31,17 +31,6 @@ def get_candidates():
             candidates.append({"title": title, "link": link, "description": description})
     return candidates
 
-def get_weather():
-    weather_api_url = "https://api.met.no/weatherapi/locationforecast/2.0/"
-    location = ("49.40384459207464, 15.170718321685152")
-    call = f"{weather_api_url}compact?lat={location[0]}&lon={location[1]}"
-    response = requests.get(call, headers={"User-Agent": "AcmeWeatherApp/0.9 github.com/acmeweatherapp"})
-    if response.status_code == 200:
-        weather_data = response.json()
-        print("Weather data:", weather_data)
-    else:
-        print(f"Failed to fetch weather data. Status code: {response.status_code}")
-
 
 def filter_candidates(client):
     candidates = get_candidates()
@@ -100,7 +89,6 @@ def filter_candidates(client):
     logging.debug(f"Prompt for summary:\n{prompt_summary}\n")
     return prompt_summary
 
-
 def wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
     with wave.open(filename, "wb") as wf:
         wf.setnchannels(channels)
@@ -129,7 +117,7 @@ def generate_audio(client):
 
     # Správný zápis podle dokumentace Google Gemini API
     interaction = client.interactions.create(
-        model="gemini-3.1-flash-tts-preview",
+        model="gemini-3.8-flash-tts",
         input=f"Přečti následující text přirozeným mluveným hlasem v češtině:\n\n{morning_summary}",
         response_format={"type": "audio"},
             generation_config={
