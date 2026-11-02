@@ -5,11 +5,13 @@ import feedparser
 from curl_cffi import requests
 import json
 from google import genai
+from google.genai.errors import APIError
 from datetime import datetime
 import logging
 import wave
 import base64
 from pathlib import Path
+from time import sleep
 
 
 def get_candidates():
@@ -97,16 +99,27 @@ def wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
         wf.writeframes(pcm)
 
 def generate_summary(client):
-    prompt_summary = filter_candidates(client)
-    morning_summary = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt_summary,
-        config={"response_mime_type": "text/plain"}
-    )
+    pokus = 1
 
-    logging.debug("Saving summary to file...")
-    with open("morning_summary.txt", "w", encoding="utf-8") as f:
-        f.write(morning_summary.text)
+    try:
+        prompt_summary = filter_candidates(client)
+        morning_summary = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt_summary,
+            config={"response_mime_type": "text/plain"}
+        )
+
+        logging.debug("Saving summary to file...")
+        with open("morning_summary.txt", "w", encoding="utf-8") as f:
+            f.write(morning_summary.text)
+    except APIError as e:
+        if e.code == 503 or "503" in str(e):
+            sleep(60)
+            pokus += 1
+    if pokus > 30:
+        logging.error("Too many attempts to generate summary")
+        return False
+    logging.debug(f"Summary generated. Tries: {pokus}")
 
 def generate_audio(client):
     with open("morning_summary.txt", "r", encoding="utf-8") as f:
@@ -115,20 +128,32 @@ def generate_audio(client):
     logging.debug("Generating audio from summary...")
     logging.debug(f"Summary text:\n{morning_summary}\n")
 
-    # Správný zápis podle dokumentace Google Gemini API
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash-tts",
-        input=f"Přečti následující text přirozeným mluveným hlasem v češtině:\n\n{morning_summary}",
-        response_format={"type": "audio"},
-            generation_config={
-                "speech_config": [
-                    {"voice": "Aoede"}
-            ]
-        }
-    )
+    pokus = 1
+    while True:
+        # Správný zápis podle dokumentace Google Gemini API
+        try:
+            interaction = client.interactions.create(
+                model="gemini-3.8-flash-tts",
+                input=f"Přečti následující text přirozeným mluveným hlasem v češtině:\n\n{morning_summary}",
+                response_format={"type": "audio"},
+                    generation_config={
+                        "speech_config": [
+                            {"voice": "Aoede"}
+                    ]
+                }
+            )
 
-    audio_data = base64.b64decode(interaction.output_audio.data)
-    wave_file("morning_summary.wav", audio_data)
+            audio_data = base64.b64decode(interaction.output_audio.data)
+            wave_file("morning_summary.wav", audio_data)
+
+        except APIError as e:
+            if e.code == 503 or "503" in str(e):
+                sleep(60)
+                pokus += 1
+        if pokus > 30:
+            logging.error("Too many attempts to generate audio.")
+            return False
+        logging.debug(f"Audio generated. Tries: {pokus}")
 
 def main():
 
