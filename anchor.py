@@ -99,27 +99,30 @@ def wave_file(filename, pcm, channels=1, rate=24000, sample_width=2):
         wf.writeframes(pcm)
 
 def generate_summary(client):
-    pokus = 1
 
-    try:
-        prompt_summary = filter_candidates(client)
-        morning_summary = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt_summary,
-            config={"response_mime_type": "text/plain"}
-        )
+    max_tries = 5
+    for i in range(max_tries):
+        try:
+            prompt_summary = filter_candidates(client)
+            morning_summary = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt_summary,
+                config={"response_mime_type": "text/plain"}
+            )
 
-        logging.debug("Saving summary to file...")
-        with open("morning_summary.txt", "w", encoding="utf-8") as f:
-            f.write(morning_summary.text)
-    except APIError as e:
-        if e.code == 503 or "503" in str(e):
-            sleep(60)
-            pokus += 1
-    if pokus > 30:
-        logging.error("Too many attempts to generate summary")
-        return False
-    logging.debug(f"Summary generated. Tries: {pokus}")
+            logging.debug("Saving summary to file...")
+            with open("morning_summary.txt", "w", encoding="utf-8") as f:
+                f.write(morning_summary.text)
+            return True
+
+        except APIError as e:
+            if e.code in (503, 429) or "503" in str(e):
+                logging.error("Error")
+                sleep(600)
+            else:
+                logging.error("Too many attempts to generate summary")
+
+    return False
 
 def generate_audio(client):
     with open("morning_summary.txt", "r", encoding="utf-8") as f:
@@ -128,10 +131,10 @@ def generate_audio(client):
     logging.debug("Generating audio from summary...")
     logging.debug(f"Summary text:\n{morning_summary}\n")
 
-    pokus = 1
-    while True:
-        # Správný zápis podle dokumentace Google Gemini API
+    max_tries = 5
+    for i in range(max_tries):
         try:
+
             interaction = client.interactions.create(
                 model="gemini-3.8-flash-tts",
                 input=f"Přečti následující text přirozeným mluveným hlasem v češtině:\n\n{morning_summary}",
@@ -145,15 +148,15 @@ def generate_audio(client):
 
             audio_data = base64.b64decode(interaction.output_audio.data)
             wave_file("morning_summary.wav", audio_data)
-
+            return True
         except APIError as e:
-            if e.code == 503 or "503" in str(e):
-                sleep(60)
-                pokus += 1
-        if pokus > 30:
-            logging.error("Too many attempts to generate audio.")
-            return False
-        logging.debug(f"Audio generated. Tries: {pokus}")
+            if e.code in (503, 429) or "503" in str(e):
+                logging.error(f"Error {e.code}. Try: {i}")
+                sleep(600)
+            else:
+                logging.error("Some other error happened. (Check your fw rules, idiot!)")
+
+    return False
 
 def main():
 
