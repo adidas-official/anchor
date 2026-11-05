@@ -12,6 +12,7 @@ import wave
 import base64
 from pathlib import Path
 from time import sleep
+from weather_predict import get_weather, get_max_temp, get_min_temp, get_clouds
 
 
 def get_candidates():
@@ -75,11 +76,16 @@ def filter_candidates(client):
 
     datum = datetime.now().strftime("%A %d.%B.%Y")
 
+    weather_forecast = get_weather()
+    max_temp = get_max_temp(weather_forecast)
+    min_temp = get_min_temp(weather_forecast)
+
     prompt_summary = f"""
     Vytvoř stručný souhrn následujících zpráv, který bude vhodný pro hlasové čtení.
     Souhrn by měl být vhodný pro čtení přirozeným hlasem, aby posluchač získal jasnou představu o obsahu zpráv.
     Začni pozdravem dobrého rána a dnešním datumem {datum} v češtině.
-    Souhrn by měl být přehledný a srozumitelný, aby posluchač získal jasnou představu o obsahu zpráv.
+    Na základě dat {weather_forecast} vytvoř předpověď počasí pro dnešní den. Uveď maximální {max_temp[0]} a minimální {min_temp[0]}, oblačnost a jestli bude během dne pršet.
+    Přidej doporučení, jak se obléknout (teplé obleční, oblečení do deště)
     Jednen článek by neměl přesahovat 1 minutu čtení, ale zároveň by měl obsahovat všechny klíčové informace.
     Jednotlivé články jsou odděleny '---'.
 
